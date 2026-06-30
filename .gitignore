@@ -2,7 +2,7 @@
 .env
 
 # Docker volumes (data persistante)
-volumes/
+/volumes/
 
 # OS
 .DS_Store

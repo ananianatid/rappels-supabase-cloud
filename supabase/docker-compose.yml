@@ -14,6 +14,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
     volumes:
       - ./volumes/db:/docker-entrypoint-initdb.d
+      - ./migrations:/docker-entrypoint-initdb.d/migrations
       - db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
