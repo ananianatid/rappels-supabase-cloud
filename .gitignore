@@ -1,0 +1,11 @@
+# Secrets
+.env
+
+# Docker volumes (data persistante)
+/volumes/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
