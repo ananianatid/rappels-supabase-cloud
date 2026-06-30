@@ -1,0 +1,15 @@
+# Secrets
+.env
+
+# Docker volumes (data persistante)
+volumes/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Projet React (dépôt séparé)
+/rappels/
