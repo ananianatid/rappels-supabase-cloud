@@ -4,7 +4,7 @@
 services:
   # ─── Base de données ─────────────────────────────────────────
   db:
-    image: supabase/postgres:15.8.1.050
+    image: supabase/postgres:17.6.1.136
     container_name: rappels-db
     restart: unless-stopped
     ports:
@@ -24,7 +24,7 @@ services:
 
   # ─── API Gateway (Kong) ──────────────────────────────────────
   kong:
-    image: kong:3.6.1
+    image: kong/kong:3.9.1
     container_name: rappels-kong
     restart: unless-stopped
     ports:
@@ -43,7 +43,7 @@ services:
 
   # ─── Auth (GoTrue) ───────────────────────────────────────────
   auth:
-    image: supabase/gotrue:v2.165.1
+    image: supabase/gotrue:v2.189.0
     container_name: rappels-auth
     restart: unless-stopped
     environment:
@@ -64,7 +64,7 @@ services:
 
   # ─── API REST (PostgREST) ────────────────────────────────────
   rest:
-    image: postgrest/postgrest:v12.2.7
+    image: postgrest/postgrest:v14.12
     container_name: rappels-rest
     restart: unless-stopped
     environment:
@@ -80,7 +80,7 @@ services:
 
   # ─── Realtime ─────────────────────────────────────────────────
   realtime:
-    image: supabase/realtime:v2.34.4
+    image: supabase/realtime:v2.102.3
     container_name: rappels-realtime
     restart: unless-stopped
     environment:
@@ -102,7 +102,7 @@ services:
 
   # ─── Storage ──────────────────────────────────────────────────
   storage:
-    image: supabase/storage-api:v1.15.0
+    image: supabase/storage-api:v1.60.4
     container_name: rappels-storage
     restart: unless-stopped
     environment:
@@ -126,7 +126,7 @@ services:
 
   # ─── Metadata API (pg-meta, optionnel mais utile) ────────────
   meta:
-    image: supabase/pg-meta:v0.84.3
+    image: supabase/postgres-meta:v0.96.6
     container_name: rappels-meta
     restart: unless-stopped
     environment:
