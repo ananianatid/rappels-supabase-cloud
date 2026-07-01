@@ -1,27 +1,8 @@
 # Supabase self-hosting stack — déploiement VPS
 # Documentation : https://supabase.com/docs/guides/self-hosting/docker
+# La base de données est externalisée (Supabase Cloud ou autre)
 
 services:
-  # ─── Base de données ─────────────────────────────────────────
-  db:
-    image: supabase/postgres:17.6.1.136
-    container_name: rappels-db
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-    volumes:
-      - ./volumes/db:/docker-entrypoint-initdb.d
-      - ./migrations:/docker-entrypoint-initdb.d/migrations
-      - db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   # ─── API Gateway (Kong) ──────────────────────────────────────
   kong:
     image: kong/kong:3.9.1
@@ -37,9 +18,6 @@ services:
       KONG_PLUGINS: request-transformer,cors,key-auth,acl
     volumes:
       - ./kong.yml:/etc/kong/kong.yml
-    depends_on:
-      db:
-        condition: service_healthy
 
   # ─── Auth (GoTrue) ───────────────────────────────────────────
   auth:
@@ -55,12 +33,9 @@ services:
       GOTRUE_API_HOST: "0.0.0.0"
       GOTRUE_API_PORT: 9999
       GOTRUE_DB_DRIVER: "postgres"
-      GOTRUE_DB_DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"
+      GOTRUE_DB_DATABASE_URL: ${POSTGRES_URL}
       GOTRUE_MAILER_AUTOCONFIRM: "${MAILER_AUTOCONFIRM}"
       GOTRUE_LOG_LEVEL: "info"
-    depends_on:
-      db:
-        condition: service_healthy
 
   # ─── API REST (PostgREST) ────────────────────────────────────
   rest:
@@ -68,15 +43,12 @@ services:
     container_name: rappels-rest
     restart: unless-stopped
     environment:
-      PGRST_DB_URI: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"
+      PGRST_DB_URI: ${POSTGRES_URL}
       PGRST_DB_SCHEMA: "public,storage,graphql_public"
       PGRST_DB_ANON_ROLE: "anon"
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_USE_LEGACY_GUCS: "false"
       PGRST_OPENAPI_SERVER_PROXY_URI: ${API_EXTERNAL_URL}
-    depends_on:
-      db:
-        condition: service_healthy
 
   # ─── Realtime ─────────────────────────────────────────────────
   realtime:
@@ -85,10 +57,10 @@ services:
     restart: unless-stopped
     environment:
       PORT: 4000
-      DB_HOST: "db"
-      DB_PORT: 5432
-      DB_NAME: "postgres"
-      DB_USER: "postgres"
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_SSL: "false"
       JWT_SECRET: ${JWT_SECRET}
@@ -96,9 +68,6 @@ services:
       REPLICATION_SLOT: "realtime_replication_slot"
       REPLICATION_PLUGIN: "pgoutput"
       SECURE_CHANNELS: "true"
-    depends_on:
-      db:
-        condition: service_healthy
 
   # ─── Storage ──────────────────────────────────────────────────
   storage:
@@ -110,7 +79,7 @@ services:
       SERVICE_KEY: ${SERVICE_KEY}
       POSTGREST_URL: http://rest:3000
       PGRST_JWT_SECRET: ${JWT_SECRET}
-      DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres"
+      DATABASE_URL: ${POSTGRES_URL}
       FILE_SIZE_LIMIT: 52428800
       STORAGE_BACKEND: "file"
       FILE_STORAGE_PATH: /var/lib/storage
@@ -119,8 +88,6 @@ services:
     volumes:
       - storage-data:/var/lib/storage
     depends_on:
-      db:
-        condition: service_healthy
       rest:
         condition: service_started
 
@@ -131,16 +98,12 @@ services:
     restart: unless-stopped
     environment:
       PG_META_PORT: 8080
-      PG_META_DB_HOST: "db"
-      PG_META_DB_PORT: 5432
-      PG_META_DB_NAME: "postgres"
-      PG_META_DB_USER: "postgres"
+      PG_META_DB_HOST: ${DB_HOST}
+      PG_META_DB_PORT: ${DB_PORT}
+      PG_META_DB_NAME: ${DB_NAME}
+      PG_META_DB_USER: ${DB_USER}
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
       PG_META_DB_SSL: "false"
-    depends_on:
-      db:
-        condition: service_healthy
 
 volumes:
-  db-data:
   storage-data:
